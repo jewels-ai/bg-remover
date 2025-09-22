@@ -2,98 +2,165 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>AR Ad – Video / 3D Options</title>
+  <title>AR Ad – Multiple Video Options</title>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
 
-  <!-- MindAR + A-Frame (for Option 1) -->
+  <!-- MindAR + A-Frame -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.6/dist/mindar-image.prod.js"></script>
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
 
-  <!-- Model Viewer (for Option 2) -->
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.0.1/model-viewer.min.js"></script>
-
   <style>
-    html, body { margin:0; padding:0; overflow:hidden; background:#000; font-family:sans-serif; }
+    html, body { margin: 0; padding: 0; overflow: hidden; background: #000; }
     .mode-selector {
-      position: fixed;
-      top: 10px; left: 50%;
-      transform: translateX(-50%);
-      z-index: 100;
-      display: flex;
-      gap: 10px;
+      position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+      z-index: 999; display: flex; gap: 10px;
     }
     .mode-selector button {
-      padding: 8px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
+      padding: 6px 12px; border: none; border-radius: 6px;
+      font-weight: bold; cursor: pointer;
     }
     .mode-selector button.active { background:#007bff; color:#fff; }
-    #videoAR, #modelAR { width:100%; height:100%; display:none; }
+    #chromakeyAR, #mindarAR { width:100%; height:100%; display:none; }
+    /* Keep your existing styles below */
+    #cam { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
+    #adCanvas { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);
+      max-width:90%; max-height:90%; display:none; z-index:5; background:transparent; }
+    #ppBtn { position:absolute; top:calc(50% + 140px); left:50%; transform:translateX(-50%);
+      padding:8px 12px; font-size:20px; border:none; border-radius:50%; background:#fff;
+      color:#000; cursor:pointer; z-index:10; box-shadow:0 0 12px rgba(0,0,0,.6); display:none; }
+    .thumbnail-bar { position:absolute; bottom:90px; left:50%; transform:translateX(-50%);
+      display:flex; gap:11px; z-index:10; }
+    .thumbnail { width:60px; height:40px; background:#fff; border:2px solid #ccc;
+      border-radius:6px; cursor:pointer; font-size:12px; display:flex; align-items:center;
+      justify-content:center; font-weight:bold; color:#000; }
+    .thumbnail.selected { border:2px solid #00f; }
+    .bottom-buttons { position:absolute; bottom:10px; width:100%; display:flex;
+      justify-content:space-around; align-items:center; z-index:10; }
+    .bottom-buttons img { width:42px; height:42px; object-fit:contain; }
   </style>
 </head>
 <body>
 
-<!-- Mode Selector -->
+<!-- Toggle -->
 <div class="mode-selector">
-  <button id="btnVideo" class="active">🎥 Video AR</button>
-  <button id="btnModel">💎 3D Model AR</button>
+  <button id="btnChroma" class="active">🎬 Chroma Key AR</button>
+  <button id="btnMindAR">📷 Marker AR</button>
 </div>
 
-<!-- Option 1: Green-Screen Video in AR -->
-<div id="videoAR">
+<!-- Existing Chroma-key AR system -->
+<div id="chromakeyAR">
+  <video id="cam" autoplay muted playsinline></video>
+  <video id="ad" playsinline loop style="display:none;"></video>
+  <canvas id="adCanvas"></canvas>
+  <button id="ppBtn" title="Play/Pause">▶️</button>
+
+  <div class="thumbnail-bar">
+    <div class="thumbnail" data-src="advertisement/promo1.mp4">PLAN1</div>
+    <div class="thumbnail" data-src="advertisement/promo2.mp4">PLAN2</div>
+    <div class="thumbnail" data-src="advertisement/promo3.mp4">PLAN3</div>
+  </div>
+
+  <div class="bottom-buttons">
+    <button id="shareBtn" title="Share"><img src="share logo1.png" alt="Share"></button>
+    <a id="location-btn" href="https://maps.app.goo.gl/uhKjXVC2H6dyWs8t5" target="_blank">
+      <img src="loclogo1.png" alt="Location Icon" style="width: 40px; height: 40px;" />
+    </a>
+    <a href="https://wa.me/917019743880?text=Hi%20Welcome%20to%20Our%20Gold%20&%20Diamonds%20,%20Can%20i%20get%20more%20datails%20about%20the%20plans" target="_blank">
+      <img src="logo whatsapp1.png" alt="WhatsApp">
+    </a>
+  </div>
+</div>
+
+<!-- New MindAR marker-based AR -->
+<div id="mindarAR">
   <a-scene mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/MindAR-js/aframe/examples/image-tracking/assets/card-example.mind;"
-           embedded
-           color-space="sRGB"
-           vr-mode-ui="enabled: false"
+           embedded color-space="sRGB" vr-mode-ui="enabled: false"
            device-orientation-permission-ui="enabled: true">
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-    <!-- Replace video with your transparent/green-screen cut video -->
     <a-entity mindar-image-target="targetIndex: 0">
-      <a-video src="advertisement/promo1.mp4" width="1" height="1.5" position="0 0 0"></a-video>
+      <a-video src="transparent-model.mp4" width="1" height="1.5" position="0 0 0"></a-video>
     </a-entity>
   </a-scene>
 </div>
 
-<!-- Option 2: 3D Model in AR -->
-<div id="modelAR">
-  <model-viewer 
-    src="model.glb"        <!-- Replace with your GLB -->
-    ios-src="model.usdz"   <!-- Replace with your USDZ -->
-    ar 
-    ar-modes="scene-viewer quick-look webxr"
-    camera-controls 
-    auto-rotate 
-    shadow-intensity="1"
-    style="width: 100%; height: 100%; background:#000;">
-  </model-viewer>
-</div>
-
 <script>
-  const btnVideo = document.getElementById("btnVideo");
-  const btnModel = document.getElementById("btnModel");
-  const videoAR = document.getElementById("videoAR");
-  const modelAR = document.getElementById("modelAR");
+  // Toggle system
+  const btnChroma = document.getElementById('btnChroma');
+  const btnMindAR = document.getElementById('btnMindAR');
+  const chromaDiv = document.getElementById('chromakeyAR');
+  const mindarDiv = document.getElementById('mindarAR');
+  chromaDiv.style.display = "block";
 
-  // Default: Video AR
-  videoAR.style.display = "block";
-
-  btnVideo.addEventListener("click", () => {
-    btnVideo.classList.add("active");
-    btnModel.classList.remove("active");
-    videoAR.style.display = "block";
-    modelAR.style.display = "none";
+  btnChroma.addEventListener("click", () => {
+    btnChroma.classList.add("active");
+    btnMindAR.classList.remove("active");
+    chromaDiv.style.display = "block";
+    mindarDiv.style.display = "none";
+  });
+  btnMindAR.addEventListener("click", () => {
+    btnMindAR.classList.add("active");
+    btnChroma.classList.remove("active");
+    chromaDiv.style.display = "none";
+    mindarDiv.style.display = "block";
   });
 
-  btnModel.addEventListener("click", () => {
-    btnModel.classList.add("active");
-    btnVideo.classList.remove("active");
-    videoAR.style.display = "none";
-    modelAR.style.display = "block";
+  // Your existing chroma-key video script (shortened here for clarity)
+  const btn = document.getElementById('ppBtn');
+  const ad = document.getElementById('ad');
+  const adCanvas = document.getElementById('adCanvas');
+  const ctx = adCanvas.getContext('2d');
+  const cam = document.getElementById('cam');
+  const thumbnails = document.querySelectorAll('.thumbnail');
+
+  let videoLoaded = false, currentVideoSrc = '', isPlaying = false, renderRequest;
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(stream => cam.srcObject = stream)
+    .catch(err => alert('Camera error: ' + err));
+
+  function renderFrame() {
+    if (ad.paused || ad.ended) return;
+    ctx.drawImage(ad, 0, 0, adCanvas.width, adCanvas.height);
+    const frame = ctx.getImageData(0, 0, adCanvas.width, adCanvas.height);
+    const data = frame.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i], g = data[i+1], b = data[i+2];
+      if (g > 80 && g > r*1.2 && g > b*1.2) data[i+3] = 0;
+      else if (g > 60 && g > r*1.1 && g > b*1.1) data[i+3] = 128;
+    }
+    ctx.putImageData(frame, 0, 0);
+    renderRequest = requestAnimationFrame(renderFrame);
+  }
+
+  thumbnails.forEach(thumbnail => {
+    thumbnail.addEventListener('click', () => {
+      const src = thumbnail.dataset.src;
+      if (src !== currentVideoSrc) {
+        currentVideoSrc = src;
+        ad.src = src; ad.load(); ad.volume = 1; videoLoaded = true;
+        ad.style.display = 'none'; adCanvas.style.display = 'block';
+        ad.addEventListener('loadedmetadata', () => {
+          adCanvas.width = ad.videoWidth; adCanvas.height = ad.videoHeight;
+        }, { once: true });
+        ad.play(); isPlaying = true; btn.innerText = '⏸️'; btn.style.display = 'block';
+        if (renderRequest) cancelAnimationFrame(renderRequest); renderFrame();
+        thumbnails.forEach(t => t.classList.remove('selected')); thumbnail.classList.add('selected');
+      }
+    });
+  });
+
+  btn.addEventListener('click', () => {
+    if (!videoLoaded) return;
+    if (ad.paused) { ad.play().then(() => { btn.innerText = '⏸️'; isPlaying = true; renderFrame(); }); }
+    else { ad.pause(); btn.innerText = '▶️'; isPlaying = false; if (renderRequest) cancelAnimationFrame(renderRequest); }
+  });
+
+  document.getElementById('shareBtn').addEventListener('click', async () => {
+    if (navigator.share) {
+      try { await navigator.share({ title:'AR Video', text:'Check this out!', url:window.location.href }); }
+      catch (err) { console.error('Share failed:', err.message); }
+    } else alert('Sharing not supported');
   });
 </script>
-
 </body>
 </html>
