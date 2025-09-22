@@ -1,196 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <title>AR Video Placement</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aframe-ar-hit-test-component@1.0.0/dist/aframe-ar-hit-test-component.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Jewellery Background Remover</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body, html { margin:0; padding:0; overflow:hidden; }
-    .thumbnail-bar {
-      position: absolute;
-      bottom: 90px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 11px;
-      z-index: 10;
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      text-align: center;
+      padding: 20px;
     }
-    .thumbnail {
-      width: 60px;
-      height: 40px;
-      background: #fff;
-      border: 2px solid #ccc;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
+    #preview, #output {
+      margin-top: 20px;
+      max-width: 90%;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    #btns {
+      margin-top: 20px;
       display: flex;
-      align-items: center;
       justify-content: center;
-      font-weight: bold;
-      color: #000;
+      gap: 15px;
     }
-    .thumbnail.selected { border: 2px solid #00f; }
-    .bottom-buttons {
-      position: absolute;
-      bottom: 10px;
-      width: 100%;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 10;
-    }
-    .bottom-buttons button,
-    .bottom-buttons a {
-      background: transparent;
+    button {
+      padding: 10px 18px;
       border: none;
-      padding: 0;
+      border-radius: 8px;
       cursor: pointer;
+      font-size: 14px;
     }
-    .bottom-buttons img {
-      width: 42px;
-      height: 42px;
-      object-fit: contain;
-    }
-    #ppBtn {
-      position: absolute;
-      top: calc(50% + 140px);
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 8px 12px;
-      font-size: 20px;
-      border: none;
-      border-radius: 50%;
-      background: #fff;
-      color: #000;
-      cursor: pointer;
-      z-index: 10;
-      box-shadow: 0 0 12px rgba(0,0,0,.6);
-      display: none;
-    }
+    #processBtn { background: gold; color: #000; font-weight: bold; }
+    #downloadBtn { background: green; color: #fff; }
+    #driveBtn { background: #4285f4; color: #fff; }
   </style>
 </head>
 <body>
 
-<a-scene
-  renderer="antialias: true; alpha: true"
-  xrweb="allowedFeatures: hit-test"
-  webxr="optionalFeatures: hit-test; requiredFeatures: hit-test"
-  embedded
->
-  <a-camera position="0 1.6 0"></a-camera>
+  <h2>✨ Upload Your Picture ✨</h2>
+  <input type="file" id="upload" accept="image/*">
+  <br>
+  <img id="preview" style="display:none;">
+  <canvas id="canvas" style="display:none;"></canvas>
+  <img id="output" style="display:none;">
 
-  <!-- Assets (default video, will change on thumbnail click) -->
-  <a-assets>
-    <video id="promoVideo" src="advertisement/promo1.mp4" autoplay loop muted playsinline></video>
-  </a-assets>
-
-  <!-- Reticle -->
-  <a-entity
-    id="reticle"
-    visible="false"
-    geometry="primitive: ring; radiusInner: 0.05; radiusOuter: 0.06"
-    material="color: yellow; shader: flat"
-    ar-hit-test="target:#videoPlane; type:footprint"
-  ></a-entity>
-
-  <!-- Video plane -->
-  <a-plane
-    id="videoPlane"
-    src="#promoVideo"
-    rotation="-90 0 0"
-    width="1.5"
-    height="0.9"
-    visible="false"
-  ></a-plane>
-</a-scene>
-
-<!-- Play/Pause button -->
-<button id="ppBtn" title="Play/Pause">▶️</button>
-
-<!-- Thumbnails -->
-<div class="thumbnail-bar">
-  <div class="thumbnail selected" data-src="advertisement/promo1.mp4">PLAN1</div>
-  <div class="thumbnail" data-src="advertisement/promo2.mp4">PLAN2</div>
-  <div class="thumbnail" data-src="advertisement/promo3.mp4">PLAN3</div>
-</div>
-
-<!-- Bottom Buttons -->
-<div class="bottom-buttons">
-  <button id="shareBtn" title="Share">
-    <img src="share logo1.png" alt="Share">
-  </button>
-  <a id="location-btn" href="https://maps.app.goo.gl/uhKjXVC2H6dyWs8t5" target="_blank" rel="noopener noreferrer">
-    <img src="loclogo1.png" alt="Location Icon" style="width: 40px; height: 40px;" />
-  </a>
-  <a href="https://wa.me/917019743880?text=Hi%20Welcome%20to%20Our%20Gold%20&%20Diamonds%20,%20Can%20i%20get%20more%20datails%20about%20the%20plans" target="_blank" id="whatsappBtn" title="WhatsApp">
-    <img src="logo whatsapp1.png" alt="WhatsApp">
-  </a>
-</div>
+  <div id="btns">
+    <button id="processBtn" style="display:none;">Remove Background</button>
+    <button id="downloadBtn" style="display:none;">Download</button>
+    <button id="driveBtn" style="display:none;">Save to Drive</button>
+  </div>
 
 <script>
-  const video = document.querySelector('#promoVideo');
-  const plane = document.querySelector('#videoPlane');
-  const reticle = document.querySelector('#reticle');
-  const ppBtn = document.getElementById('ppBtn');
-  const thumbnails = document.querySelectorAll('.thumbnail');
-  let videoPlaced = false;
+const upload = document.getElementById('upload');
+const preview = document.getElementById('preview');
+const canvas = document.getElementById('canvas');
+const output = document.getElementById('output');
+const processBtn = document.getElementById('processBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const driveBtn = document.getElementById('driveBtn');
 
-  // Place video plane when surface detected & user taps
-  document.body.addEventListener('click', () => {
-    if (!videoPlaced && reticle.getAttribute('visible')) {
-      const position = reticle.getAttribute('position');
-      const rotation = reticle.getAttribute('rotation');
-      plane.setAttribute('position', position);
-      plane.setAttribute('rotation', rotation);
-      plane.setAttribute('visible', true);
-      videoPlaced = true;
-      video.play().catch(e => console.log("Play blocked:", e));
-      ppBtn.style.display = 'block';
+let uploadedImg;
+
+upload.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    preview.src = evt.target.result;
+    preview.style.display = 'block';
+    processBtn.style.display = 'inline-block';
+  };
+  reader.readAsDataURL(file);
+});
+
+// Simulated background removal (in real app, call remove.bg API)
+processBtn.addEventListener('click', () => {
+  const ctx = canvas.getContext('2d');
+  canvas.width = preview.naturalWidth;
+  canvas.height = preview.naturalHeight;
+  ctx.drawImage(preview, 0, 0);
+
+  // ⚠️ DEMO EFFECT ONLY: making corners transparent
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < imgData.data.length; i += 4) {
+    if ((i/4) % canvas.width < 50 || (i/4) % canvas.width > canvas.width-50) {
+      imgData.data[i+3] = 0; // transparency
     }
-  });
+  }
+  ctx.putImageData(imgData, 0, 0);
 
-  // Thumbnails change video source
-  thumbnails.forEach(t => {
-    t.addEventListener('click', () => {
-      thumbnails.forEach(tt => tt.classList.remove('selected'));
-      t.classList.add('selected');
-      const src = t.dataset.src;
-      video.src = src;
-      video.load();
-      if (videoPlaced) video.play();
-    });
-  });
+  output.src = canvas.toDataURL("image/png");
+  output.style.display = 'block';
+  downloadBtn.style.display = 'inline-block';
+  driveBtn.style.display = 'inline-block';
+});
 
-  // Play/Pause button
-  ppBtn.addEventListener('click', () => {
-    if (video.paused) {
-      video.play();
-      ppBtn.innerText = '⏸️';
-    } else {
-      video.pause();
-      ppBtn.innerText = '▶️';
-    }
-  });
+// Download final image
+downloadBtn.addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.href = output.src;
+  link.download = 'jewellery_output.png';
+  link.click();
+});
 
-  // Share button
-  document.getElementById('shareBtn').addEventListener('click', async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'AR Video',
-          text: 'Check out this amazing AR experience!',
-          url: window.location.href
-        });
-      } catch (err) {
-        console.error('Share failed:', err.message);
-      }
-    } else {
-      alert('Sharing not supported on this device.');
-    }
+// Save to Google Drive (opens Drive upload with pre-filled file)
+driveBtn.addEventListener('click', () => {
+  const blob = fetch(output.src).then(res => res.blob());
+  blob.then(b => {
+    const file = new File([b], "jewellery_output.png", {type: "image/png"});
+    const form = new FormData();
+    form.append("file", file);
+
+    alert("👉 For real Drive upload, connect Google Picker/Drive API.\nCurrently, this is just a placeholder.");
+    window.open("https://drive.google.com/drive/my-drive", "_blank");
   });
+});
 </script>
 
 </body>
